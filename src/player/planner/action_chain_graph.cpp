@@ -496,6 +496,17 @@ ActionChainGraph::calculateResultBestFirstSearch( const WorldModel & wm,
             std::vector< ActionStatePair > candidate_series = series;
             candidate_series.push_back( *it );
 
+            /* verbose chain cycles sum */
+            size_t chain_cycles_sum = 0;
+            for ( std::vector< ActionStatePair >::const_iterator it = candidate_series.begin();
+                  it != candidate_series.end();
+                  ++it )
+            {
+                chain_cycles_sum += it->state().spendTime();
+            }
+            dlog.addText( Logger::ACTION_CHAIN,
+                          "candidate: chain_cycles_sum = %d", chain_cycles_sum );
+
             double ev = (*M_evaluator)( (*it).state(), candidate_series );
             ++(*n_evaluated);
 #ifdef ACTION_CHAIN_DEBUG
