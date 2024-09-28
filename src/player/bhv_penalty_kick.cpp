@@ -71,7 +71,7 @@ bool
 Bhv_PenaltyKick::execute( PlayerAgent * agent )
 {
     const WorldModel & wm = agent->world();
-    const PenaltyKickState * state = wm.penaltyKickState();
+    const PenaltyKickState * state = &wm.penaltyKickState();
 
     switch ( wm.gameMode().type() ) {
     case GameMode::PenaltySetup_:
@@ -188,7 +188,7 @@ Bhv_PenaltyKick::doKickerWait( PlayerAgent * agent )
     }
 #else
     const WorldModel & wm = agent->world();
-    const PenaltyKickState * state = wm.penaltyKickState();
+    const PenaltyKickState * state = &wm.penaltyKickState();
 
     const int taker_unum = 11 - ( ( state->ourTakerCounter() - 1 ) % 11 );
     const double circle_r = ServerParam::i().centerCircleR() - 1.0;
@@ -280,7 +280,7 @@ bool
 Bhv_PenaltyKick::doKickerReady( PlayerAgent * agent )
 {
     const WorldModel & wm = agent->world();
-    const PenaltyKickState * state = wm.penaltyKickState();
+    const PenaltyKickState * state = &wm.penaltyKickState();
 
     // stamina recovering...
     if ( wm.self().stamina() < ServerParam::i().staminaMax() - 10.0
@@ -442,7 +442,7 @@ bool
 Bhv_PenaltyKick::doShoot( PlayerAgent * agent )
 {
     const WorldModel & wm = agent->world();
-    const PenaltyKickState * state = wm.penaltyKickState();
+    const PenaltyKickState * state = &wm.penaltyKickState();
 
     if ( wm.time().cycle() - state->time().cycle() > ServerParam::i().penTakenWait() - 25 )
     {
