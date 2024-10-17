@@ -218,8 +218,7 @@ SampleCoach::actionImpl()
          player_nearest_to_ball != NULL &&
          fastest_player->side() == player_nearest_to_ball->side() &&
          fastest_player->unum() == player_nearest_to_ball->unum() &&
-         (fastest_player->ballReachStep() <= 3 || /* magic number */ /* TODO: rm dist condition and try <= 5 */
-          fastest_player->pos().dist( world().ball().pos() ) <= 2.0) ) { /* magic number */
+         fastest_player->ballReachStep() <= 5 ) /* magic number */ {
 
         dlog.addText( Logger::TEAM, 
                       "(possession_estimation, game_mode)=(%s%d, %s)",
