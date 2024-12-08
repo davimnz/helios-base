@@ -288,28 +288,31 @@ SamplePlayer::actionImpl()
 
     if (positions.empty()) {
         positions.resize(23);
-        for (auto &pos: positions) {
-            /* Too far object */
-            pos.first = 999.0;
-            pos.second = 999.0;
-        }
     }
 
     if (velocities.empty()) {
         velocities.resize(23);
-        for (auto &vel: velocities) {
-            /* Too far object */
-            vel.first = 999.0;
-            vel.second = 999.0;
-        }
     }
 
     if (bodies.empty()) {
         bodies.resize(22);
-        for (auto &body: bodies) {
-            /* Too far object */
-            body = 999.0;
-        }
+    }
+
+    for (auto &pos: positions) {
+        /* Too far object */
+        pos.first = 999.0;
+        pos.second = 999.0;
+    }
+
+    for (auto &vel: velocities) {
+        /* Too far object */
+        vel.first = 999.0;
+        vel.second = 999.0;
+    }
+    
+    for (auto &body: bodies) {
+        /* Too far object */
+        body = 999.0;
     }
 
     for (auto &opponent: world().opponents()) {
