@@ -227,6 +227,149 @@ SamplePlayer::actionImpl()
                   << std::endl;
     }
 
+    //
+    // log visible objects
+    //
+    static std::string teammate_side;
+    static std::string opponent_side;
+    if ( world().self().side() == SideID::LEFT &&
+         teammate_side.empty() &&
+         opponent_side.empty() )
+    {
+        teammate_side = "l";
+        opponent_side = "r";
+    }
+    else if ( teammate_side.empty() &&
+              opponent_side.empty() )
+    {
+        teammate_side = "r";
+        opponent_side = "l";
+    }
+
+    static std::ofstream custom_log;
+    if (!custom_log.is_open()) {
+        std::string filename = "./positions";
+        filename += std::to_string(world().self().unum());
+        filename += ".csv";
+
+        custom_log.open(filename, std::ios::app);
+        
+        for (int i = 1; i < 12; ++i) {
+            custom_log << "l" << i << "_x,";
+            custom_log << "l" << i << "_y,";
+            custom_log << "l" << i << "_vx,";
+            custom_log << "l" << i << "_vy,";
+            custom_log << "l" << i << "_body,";
+        }
+        
+        for (int i = 1; i < 12; ++i) {
+            custom_log << "r" << i << "_x,";
+            custom_log << "r" << i << "_y,";
+            custom_log << "r" << i << "_vx,";
+            custom_log << "r" << i << "_vy,";
+            custom_log << "r" << i << "_body,";
+        }
+
+        custom_log << "b_x,";
+        custom_log << "b_y,";
+        custom_log << "b_vx,";
+        custom_log << "b_vy,";
+
+        custom_log << "game_cycle,";
+        custom_log << "play_mode\n";
+    }
+
+    static bool know_unum;
+    static bool know_pos;
+    static bool know_vel;
+    static std::vector<std::pair<double, double>> positions;
+    static std::vector<std::pair<double, double>> velocities;
+    static std::vector<double> bodies;
+
+    if (positions.empty()) {
+        positions.resize(23);
+        for (auto &pos: positions) {
+            /* Too far object */
+            pos.first = 999.0;
+            pos.second = 999.0;
+        }
+    }
+
+    if (velocities.empty()) {
+        velocities.resize(23);
+        for (auto &vel: velocities) {
+            /* Too far object */
+            vel.first = 999.0;
+            vel.second = 999.0;
+        }
+    }
+
+    if (bodies.empty()) {
+        bodies.resize(22);
+        for (auto &body: bodies) {
+            /* Too far object */
+            body = 999.0;
+        }
+    }
+
+    for (auto &opponent: world().opponents()) {
+        know_unum = (opponent->unum() != Unum_Unknown) && (opponent->unumCount() == 0);
+        know_pos = (opponent->posCount() == 0);
+        know_vel = (opponent->velCount() == 0);
+        if (know_unum &&
+            know_pos &&
+            know_vel) {
+            positions[opponent->unum() - 1].first = opponent->pos().x;
+            positions[opponent->unum() - 1].second = opponent->pos().y;
+            velocities[opponent->unum() - 1].first = opponent->vel().x;
+            velocities[opponent->unum() - 1].second = opponent->vel().y;
+            bodies[opponent->unum() - 1] = opponent->body().degree();
+        }
+    }
+
+    for (auto &teammate: world().teammates()) {
+        know_unum = (teammate->unum() != Unum_Unknown) && (teammate->unumCount() == 0);
+        know_pos = (teammate->posCount() == 0);
+        know_vel = (teammate->velCount() == 0);
+        if ( know_unum &&
+             know_pos &&
+             know_vel ) {
+            positions[11 + teammate->unum() - 1].first = teammate->pos().x;
+            positions[11 + teammate->unum() - 1].second = teammate->pos().y;
+            velocities[11 + teammate->unum() - 1].first = teammate->vel().x;
+            velocities[11 + teammate->unum() - 1].second = teammate->vel().y;
+            bodies[11 + teammate->unum() - 1] = teammate->body().degree();
+        }
+    }
+
+    know_pos = (world().ball().posCount() == 0);
+    know_vel = (world().ball().velCount() == 0);
+    if ( know_pos &&
+         know_vel ) {
+        positions[22].first = world().ball().pos().x;
+        positions[22].second = world().ball().pos().y;
+        velocities[22].first = world().ball().vel().x;
+        velocities[22].second = world().ball().vel().y;
+    }
+
+    /* Do not write before kick off */
+    if (world().gameMode().type() != GameMode::BeforeKickOff) {
+        
+        for (int i = 0; i < 22; ++i) {
+            custom_log << positions[i].first << ",";
+            custom_log << positions[i].second << ",";
+            custom_log << velocities[i].first << ",";
+            custom_log << velocities[i].second << ",";
+            custom_log << bodies[i] << ",";
+        }
+
+        custom_log << positions[22].first << ",";
+        custom_log << positions[22].second << ",";
+        custom_log << velocities[22].first << ",";
+        custom_log << velocities[22].second << ",";
+        custom_log << world().time().cycle() << ",";
+        custom_log << world().gameMode().toCString() << "\n";
+    }
 
     //
     // update strategy and analyzer
