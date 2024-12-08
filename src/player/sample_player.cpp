@@ -248,7 +248,7 @@ SamplePlayer::actionImpl()
 
     static std::ofstream custom_log;
     if (!custom_log.is_open()) {
-        std::string filename = "./game_mode_";
+        std::string filename = "./game_info_";
         filename += std::to_string(world().self().unum());
         filename += ".csv";
 
