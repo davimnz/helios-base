@@ -255,19 +255,19 @@ SamplePlayer::actionImpl()
         custom_log.open(filename, std::ios::app);
         
         for (int i = 1; i < 12; ++i) {
-            custom_log << "l" << i << "_x,";
-            custom_log << "l" << i << "_y,";
-            custom_log << "l" << i << "_vx,";
-            custom_log << "l" << i << "_vy,";
-            custom_log << "l" << i << "_body,";
+            custom_log << teammate_side << i << "_x,";
+            custom_log << teammate_side << i << "_y,";
+            custom_log << teammate_side << i << "_vx,";
+            custom_log << teammate_side << i << "_vy,";
+            custom_log << teammate_side << i << "_body,";
         }
         
         for (int i = 1; i < 12; ++i) {
-            custom_log << "r" << i << "_x,";
-            custom_log << "r" << i << "_y,";
-            custom_log << "r" << i << "_vx,";
-            custom_log << "r" << i << "_vy,";
-            custom_log << "r" << i << "_body,";
+            custom_log << opponent_side << i << "_x,";
+            custom_log << opponent_side << i << "_y,";
+            custom_log << opponent_side << i << "_vx,";
+            custom_log << opponent_side << i << "_vy,";
+            custom_log << opponent_side << i << "_body,";
         }
 
         custom_log << "b_x,";
@@ -315,21 +315,6 @@ SamplePlayer::actionImpl()
         body = 999.0;
     }
 
-    for (auto &opponent: world().opponents()) {
-        know_unum = (opponent->unum() != Unum_Unknown) && (opponent->unumCount() == 0);
-        know_pos = (opponent->posCount() == 0);
-        know_vel = (opponent->velCount() == 0);
-        if (know_unum &&
-            know_pos &&
-            know_vel) {
-            positions[opponent->unum() - 1].first = opponent->pos().x;
-            positions[opponent->unum() - 1].second = opponent->pos().y;
-            velocities[opponent->unum() - 1].first = opponent->vel().x;
-            velocities[opponent->unum() - 1].second = opponent->vel().y;
-            bodies[opponent->unum() - 1] = opponent->body().degree();
-        }
-    }
-
     for (auto &teammate: world().teammates()) {
         know_unum = (teammate->unum() != Unum_Unknown) && (teammate->unumCount() == 0);
         know_pos = (teammate->posCount() == 0);
@@ -337,11 +322,26 @@ SamplePlayer::actionImpl()
         if ( know_unum &&
              know_pos &&
              know_vel ) {
-            positions[11 + teammate->unum() - 1].first = teammate->pos().x;
-            positions[11 + teammate->unum() - 1].second = teammate->pos().y;
-            velocities[11 + teammate->unum() - 1].first = teammate->vel().x;
-            velocities[11 + teammate->unum() - 1].second = teammate->vel().y;
-            bodies[11 + teammate->unum() - 1] = teammate->body().degree();
+            positions[teammate->unum() - 1].first = teammate->pos().x;
+            positions[teammate->unum() - 1].second = teammate->pos().y;
+            velocities[teammate->unum() - 1].first = teammate->vel().x;
+            velocities[teammate->unum() - 1].second = teammate->vel().y;
+            bodies[teammate->unum() - 1] = teammate->body().degree();
+        }
+    }
+
+    for (auto &opponent: world().opponents()) {
+        know_unum = (opponent->unum() != Unum_Unknown) && (opponent->unumCount() == 0);
+        know_pos = (opponent->posCount() == 0);
+        know_vel = (opponent->velCount() == 0);
+        if (know_unum &&
+            know_pos &&
+            know_vel) {
+            positions[11 + opponent->unum() - 1].first = opponent->pos().x;
+            positions[11 + opponent->unum() - 1].second = opponent->pos().y;
+            velocities[11 + opponent->unum() - 1].first = opponent->vel().x;
+            velocities[11 + opponent->unum() - 1].second = opponent->vel().y;
+            bodies[11 + opponent->unum() - 1] = opponent->body().degree();
         }
     }
 
