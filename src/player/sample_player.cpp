@@ -315,10 +315,16 @@ SamplePlayer::actionImpl()
         body = 999.0;
     }
 
+    int unknown_unum_teammates = 0;
     for (auto &teammate: world().teammates()) {
-        know_unum = (teammate->unum() != Unum_Unknown) && (teammate->unumCount() == 0);
-        know_pos = (teammate->posCount() == 0);
-        know_vel = (teammate->velCount() == 0);
+        know_unum = (teammate->unum() != Unum_Unknown) && (teammate->unumCount() <= 1);
+        /* We know the unum */
+        if (!know_unum) {
+            unknown_unum_teammates++;
+        }
+
+        know_pos = (teammate->posCount() <= 1);
+        know_vel = (teammate->velCount() <= 1);
         if ( know_unum &&
              know_pos &&
              know_vel ) {
@@ -327,13 +333,25 @@ SamplePlayer::actionImpl()
             velocities[teammate->unum() - 1].first = teammate->vel().x;
             velocities[teammate->unum() - 1].second = teammate->vel().y;
             bodies[teammate->unum() - 1] = teammate->body().degree();
+
+            /*
+             * Log distance between self and teammate.
+             */
+            // auto dist2teammate = teammate->pos().dist( world().self().pos() );
+            // dlog.addText( Logger::TEAM, __FILE__": dist2teammate %f", dist2teammate );
         }
     }
 
+    int unknown_unum_opponents = 0;
     for (auto &opponent: world().opponents()) {
-        know_unum = (opponent->unum() != Unum_Unknown) && (opponent->unumCount() == 0);
-        know_pos = (opponent->posCount() == 0);
-        know_vel = (opponent->velCount() == 0);
+        know_unum = (opponent->unum() != Unum_Unknown) && (opponent->unumCount() <= 1);
+        /* We know the unum */
+        if (!know_unum) {
+            unknown_unum_opponents++;
+        }
+
+        know_pos = (opponent->posCount() <= 1);
+        know_vel = (opponent->velCount() <= 1);
         if (know_unum &&
             know_pos &&
             know_vel) {
@@ -342,11 +360,31 @@ SamplePlayer::actionImpl()
             velocities[11 + opponent->unum() - 1].first = opponent->vel().x;
             velocities[11 + opponent->unum() - 1].second = opponent->vel().y;
             bodies[11 + opponent->unum() - 1] = opponent->body().degree();
+
+            /*
+             * Log distance between self and opponent.
+             * Visual sensor is accurate only when the distance is less than 20.
+             */
+            // auto dist2opp = opponent->pos().dist( world().self().pos() );
+            // dlog.addText( Logger::TEAM, __FILE__": dist2opp %f", dist2opp );
+
         }
     }
 
-    know_pos = (world().ball().posCount() == 0);
-    know_vel = (world().ball().velCount() == 0);
+    if ( world().gameMode().type() == GameMode::PlayOn ) {
+        dlog.addText( Logger::TEAM,
+                      __FILE__": unknown_unum_teammates=%d unknown_unum_opponents=%d",
+                      unknown_unum_teammates,
+                      unknown_unum_opponents );
+    }
+
+    // dlog.addText( Logger::TEAM,
+    //               __FILE__": teammates %d | opponents %d",
+    //               world().teammates().size(),
+    //               world().opponents().size() );
+
+    know_pos = (world().ball().posCount() <= 1);
+    know_vel = (world().ball().velCount() <= 1);
     if ( know_pos &&
          know_vel ) {
         positions[22].first = world().ball().pos().x;
