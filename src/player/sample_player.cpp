@@ -255,6 +255,7 @@ SamplePlayer::actionImpl()
         custom_log.open(filename, std::ios::app);
         
         for (int i = 1; i < 12; ++i) {
+            custom_log << teammate_side << i << "_unum,";
             custom_log << teammate_side << i << "_x,";
             custom_log << teammate_side << i << "_y,";
             custom_log << teammate_side << i << "_vx,";
@@ -263,6 +264,7 @@ SamplePlayer::actionImpl()
         }
         
         for (int i = 1; i < 12; ++i) {
+            custom_log << opponent_side << i << "_unum,";
             custom_log << opponent_side << i << "_x,";
             custom_log << opponent_side << i << "_y,";
             custom_log << opponent_side << i << "_vx,";
@@ -282,9 +284,14 @@ SamplePlayer::actionImpl()
     static bool know_unum;
     static bool know_pos;
     static bool know_vel;
+    static std::vector<int> unums;
     static std::vector<std::pair<double, double>> positions;
     static std::vector<std::pair<double, double>> velocities;
     static std::vector<double> bodies;
+
+    if (unums.empty()) {
+        unums.resize(22);
+    }
 
     if (positions.empty()) {
         positions.resize(23);
@@ -296,6 +303,11 @@ SamplePlayer::actionImpl()
 
     if (bodies.empty()) {
         bodies.resize(22);
+    }
+
+    for (auto &unum: unums) {
+        /* Unknown unum */
+        unum = 999;
     }
 
     for (auto &pos: positions) {
@@ -315,76 +327,58 @@ SamplePlayer::actionImpl()
         body = 999.0;
     }
 
-    int unknown_unum_teammates = 0;
+    static const int POS_COUNT_THR = 3;
+    static const int VEL_COUNT_THR = 3;
+    static const int UNUM_COUNT_THR = 0;
+
+    int teammate_idx = 0;
     for (auto &teammate: world().teammates()) {
-        know_unum = (teammate->unum() != Unum_Unknown) && (teammate->unumCount() <= 1);
-        /* We know the unum */
-        if (!know_unum) {
-            unknown_unum_teammates++;
-        }
+        know_unum = (teammate->unum() != Unum_Unknown) && (teammate->unumCount() <= UNUM_COUNT_THR);
 
-        know_pos = (teammate->posCount() <= 1);
-        know_vel = (teammate->velCount() <= 1);
-        if ( know_unum &&
-             know_pos &&
+        know_pos = (teammate->posCount() <= POS_COUNT_THR);
+        know_vel = (teammate->velCount() <= VEL_COUNT_THR);
+        if ( know_pos &&
              know_vel ) {
-            positions[teammate->unum() - 1].first = teammate->pos().x;
-            positions[teammate->unum() - 1].second = teammate->pos().y;
-            velocities[teammate->unum() - 1].first = teammate->vel().x;
-            velocities[teammate->unum() - 1].second = teammate->vel().y;
-            bodies[teammate->unum() - 1] = teammate->body().degree();
 
-            /*
-             * Log distance between self and teammate.
-             */
-            // auto dist2teammate = teammate->pos().dist( world().self().pos() );
-            // dlog.addText( Logger::TEAM, __FILE__": dist2teammate %f", dist2teammate );
+            if (know_unum) {
+                unums[teammate_idx] = teammate->unum();
+            }
+
+            positions[teammate_idx].first = teammate->pos().x;
+            positions[teammate_idx].second = teammate->pos().y;
+            velocities[teammate_idx].first = teammate->vel().x;
+            velocities[teammate_idx].second = teammate->vel().y;
+            bodies[teammate_idx] = teammate->body().degree();
         }
+
+        teammate_idx++;
     }
 
-    int unknown_unum_opponents = 0;
+    int opponent_idx = 0;
     for (auto &opponent: world().opponents()) {
-        know_unum = (opponent->unum() != Unum_Unknown) && (opponent->unumCount() <= 1);
-        /* We know the unum */
-        if (!know_unum) {
-            unknown_unum_opponents++;
+        know_unum = (opponent->unum() != Unum_Unknown) && (opponent->unumCount() <= UNUM_COUNT_THR);
+
+        know_pos = (opponent->posCount() <= POS_COUNT_THR);
+        know_vel = (opponent->velCount() <= VEL_COUNT_THR);
+        if ( know_pos &&
+             know_vel ) {
+
+            if (know_unum) {
+                unums[11 + opponent_idx] = opponent->unum();
+            }
+
+            positions[11 + opponent_idx].first = opponent->pos().x;
+            positions[11 + opponent_idx].second = opponent->pos().y;
+            velocities[11 + opponent_idx].first = opponent->vel().x;
+            velocities[11 + opponent_idx].second = opponent->vel().y;
+            bodies[11 + opponent_idx] = opponent->body().degree();
         }
 
-        know_pos = (opponent->posCount() <= 1);
-        know_vel = (opponent->velCount() <= 1);
-        if (know_unum &&
-            know_pos &&
-            know_vel) {
-            positions[11 + opponent->unum() - 1].first = opponent->pos().x;
-            positions[11 + opponent->unum() - 1].second = opponent->pos().y;
-            velocities[11 + opponent->unum() - 1].first = opponent->vel().x;
-            velocities[11 + opponent->unum() - 1].second = opponent->vel().y;
-            bodies[11 + opponent->unum() - 1] = opponent->body().degree();
-
-            /*
-             * Log distance between self and opponent.
-             * Visual sensor is accurate only when the distance is less than 20.
-             */
-            // auto dist2opp = opponent->pos().dist( world().self().pos() );
-            // dlog.addText( Logger::TEAM, __FILE__": dist2opp %f", dist2opp );
-
-        }
+        opponent_idx++;
     }
 
-    if ( world().gameMode().type() == GameMode::PlayOn ) {
-        dlog.addText( Logger::TEAM,
-                      __FILE__": unknown_unum_teammates=%d unknown_unum_opponents=%d",
-                      unknown_unum_teammates,
-                      unknown_unum_opponents );
-    }
-
-    // dlog.addText( Logger::TEAM,
-    //               __FILE__": teammates %d | opponents %d",
-    //               world().teammates().size(),
-    //               world().opponents().size() );
-
-    know_pos = (world().ball().posCount() <= 1);
-    know_vel = (world().ball().velCount() <= 1);
+    know_pos = (world().ball().posCount() <= POS_COUNT_THR);
+    know_vel = (world().ball().velCount() <= VEL_COUNT_THR);
     if ( know_pos &&
          know_vel ) {
         positions[22].first = world().ball().pos().x;
@@ -397,6 +391,7 @@ SamplePlayer::actionImpl()
     if (world().gameMode().type() != GameMode::BeforeKickOff) {
         
         for (int i = 0; i < 22; ++i) {
+            custom_log << unums[i] << ",";
             custom_log << positions[i].first << ",";
             custom_log << positions[i].second << ",";
             custom_log << velocities[i].first << ",";
